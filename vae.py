@@ -12,11 +12,14 @@ from glob import glob
 from torchvision import transforms, utils
 
 
-class Encoder(nn.Module):
-	def __init__(self, input_size, output_size, conv1_output_size, 
-		conv1_kernel_size, conv2_output_size, conv2_kernel_size, hidden1_size, 
-		hidden2_size, stride1, stride2):
-		super(Encoder, self).__init__()
+class VAE(nn.Module):
+	def __init__(self, encoder, decoder, latent_vector_size):
+		super(VAE, self).__init__()
+		self.encoder = encoder
+		self.decoder = decoder
+		self.latent_vector_size = latent_vector_size
+
+		#encoder 
 		self.input_size = input_size
 		self.output_size = output_size
 		self.stride1 = stride1
@@ -30,19 +33,7 @@ class Encoder(nn.Module):
 		self.fc1 = nn.Linear(hidden1_size, hidden2_size)
 		self.fc2 = nn.Linear(hidden2_size, output_size)
 
-	def forward(self, x):
-		x = F.relu(F.max_pool2d(self.conv1(x), self.stride1))
-		x = F.relu(F.max_pool2d(self.conv2(x), self.stride2))
-		x = F.view(-1, hidden1_size)
-		x = F.relu(self.fc1(x))
-		x = self.fc2(x)
-		return x
-
-
-class Decoder(nn.Module):
-	def __init__(self, input_size, output_size, deconv1_output_size,
-		deconv1_kernel_size, deconv2_output_size, deconv2_kernel_size):
-		super(Decoder, self).__init__()
+		#decoder 
 		self.input_size = input_size
 		self.output_size = output_size
 
@@ -50,19 +41,19 @@ class Decoder(nn.Module):
 		self.deconv2 = nn.ConvTranspose2d(deconv1_output_size, deconv2_output_size, kernel_size = deconv2_kernel_size)
 		self.outputdeconv = nn.ConvTranspose2d(deconv2_output_size, output_size, kernel_size = outputdeconv_kernel_size)
 
-	def forward(self, x):
+	def encode(self, x):
+		x = F.relu(F.max_pool2d(self.conv1(x), self.stride1))
+		x = F.relu(F.max_pool2d(self.conv2(x), self.stride2))
+		x = F.view(-1, hidden1_size)
+		x = F.relu(self.fc1(x))
+		x = self.fc2(x)
+		return x
+
+	def decode(self, x):
 		x = F.relu(self.deconv1(x))
 		x = F.relu(self.deconv2(x))
 		x = F.relu(self.outputdeconv(x))
 		return x
-
-
-class VAE(nn.Module):
-	def __init__(self, encoder, decoder, latent_vector_size):
-		super(VAE, self).__init__()
-		self.encoder = encoder
-		self.decoder = decoder
-		self.latent_vector_size = latent_vector_size
 
 
 def processImage(image, x_size, y_size):
@@ -81,8 +72,7 @@ def getData(folder, save = False):
 	return np.array(data)
 
 
-# def train(data, x, y, latent_vector_size):
-	
+
 
 
 
