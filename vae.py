@@ -10,94 +10,92 @@ import os
 from PIL import Image
 from glob import glob
 from torchvision import transforms, utils
+from torch.autograd import Variable
 
 
 class VAE(nn.Module):
-	def __init__(self, encoder, decoder, latent_vector_size):
+	def __init__(self, params):
 		super(VAE, self).__init__()
-		self.encoder = encoder
-		self.decoder = decoder
-		self.latent_vector_size = latent_vector_size
+		self.params = params
+		# print(self.params)
 
 		#encoder 
-		self.input_size = input_size
-		self.output_size = output_size
-		self.stride1 = stride1
-		self.stride2 = stride2
-		self.hidden1_size = hidden1_size
-		self.hidden2_size = hidden2_size
+		self.conv1 = nn.Conv2d(3, self.params['conv1_output_size'], kernel_size = self.params['conv1_kernel_size'], 
+			padding = self.params['conv1_kernel_size']//2, stride = 2)
+		self.bn1c = nn.BatchNorm2d(self.params['conv1_output_size'])
+		self.conv2 = nn.Conv2d(self.params['conv1_output_size'], self.params['conv2_output_size'], kernel_size = self.params['conv2_kernel_size'], 
+			padding = self.params['conv2_kernel_size']//2, stride = 2)
+		self.bn2c = nn.BatchNorm2d(self.params['conv2_output_size'])
 
-		self.conv1 = nn.Conv2d(3, conv1_output_size, kernel_size = conv1_kernel_size)
-		self.conv2 = nn.Conv2d(conv1_output_size, conv2_output_size, kernel_size = conv2_kernel_size)
+		# self.efc1 = nn.Linear(25 * 25 * self.params['conv2_output_size'], self.params['hidden2_size'])
+		# self.efc1_bn = nn.BatchNorm1d(self.params['hidden2_size'])
+		# self.efc21 = nn.Linear(self.params['hidden2_size'], self.params['latent_vector_size'])
+		# self.efc22 = nn.Linear(self.params['hidden2_size'], self.params['latent_vector_size'])
 
-		self.fc1 = nn.Linear(hidden1_size, hidden2_size)
-		self.fc2 = nn.Linear(hidden2_size, output_size)
+		# #decoder 
+		# self.dfc1 = nn.Linear(self.params['latent_vector_size'], self.params['hidden2_size'])
+		# self.dfc1_bn = nn.BatchNorm1d(self.params['hidden2_size'])
+		# self.dfc2 = nn.Linear(self.params['hidden2_size'], self.params['hidden1_size'])
+		# self.dfc2_bn = nn.BatchNorm1d(self.params['hidden1_size'])
+
+
+		self.params['hidden2_size'] = self.params['latent_vector_size']
+		self.params['hidden1_size'] = self.params['conv2_output_size']
+
+		self.efc1 = nn.Linear(25 * 25 * self.params['conv2_output_size'], self.params['hidden2_size'])
+		self.efc1_bn = nn.BatchNorm1d(self.params['hidden2_size'])
+		self.efc21 = nn.Linear(self.params['hidden2_size'], self.params['latent_vector_size'])
+		self.efc22 = nn.Linear(self.params['hidden2_size'], self.params['latent_vector_size'])
 
 		#decoder 
-		self.input_size = input_size
-		self.output_size = output_size
+		self.dfc1 = nn.Linear(self.params['latent_vector_size'], self.params['hidden2_size'])
+		self.dfc1_bn = nn.BatchNorm1d(self.params['hidden2_size'])
+		self.dfc2 = nn.Linear(self.params['hidden2_size'], 25 * 25 * self.params['hidden1_size'])
+		self.dfc2_bn = nn.BatchNorm1d(25 * 25 * self.params['hidden1_size'])
 
-		self.deconv1 = nn.ConvTranspose2d(input_size, deconv1_output_size, kernel_size = deconv1_kernel_size)
-		self.deconv2 = nn.ConvTranspose2d(deconv1_output_size, deconv2_output_size, kernel_size = deconv2_kernel_size)
-		self.outputdeconv = nn.ConvTranspose2d(deconv2_output_size, output_size, kernel_size = outputdeconv_kernel_size)
+		self.deconv1 = nn.ConvTranspose2d(self.params['hidden1_size'], self.params['conv2_output_size'], kernel_size = self.params['deconv1_kernel_size'],
+			padding = 1, output_padding = 1, stride = 2)
+		self.bn1d = nn.BatchNorm2d(self.params['conv2_output_size'])
+		self.deconv2 = nn.ConvTranspose2d(self.params['conv2_output_size'], 3, kernel_size = self.params['deconv2_kernel_size'], 
+			padding = 1, output_padding = 1, stride = 2)
+
+		self.relu = nn.ReLU(0.1)
 
 	def encode(self, x):
-		x = F.relu(F.max_pool2d(self.conv1(x), self.stride1))
-		x = F.relu(F.max_pool2d(self.conv2(x), self.stride2))
-		x = F.view(-1, hidden1_size)
-		x = F.relu(self.fc1(x))
-		x = self.fc2(x)
-		return x
+		# print(x.size())
+		x = self.relu(self.bn1c(self.conv1(x)))
+		# print(x.size())
+		x = self.relu(self.bn2c(self.conv2(x))).view(-1, 25 * 25 * self.params['conv2_output_size'])
+		# print(x.size())
+		x = self.relu(self.efc1_bn(self.efc1(x)))
+		# print(x.size())
+		return self.efc21(x), self.efc22(x)
 
-	def decode(self, x):
-		x = F.relu(self.deconv1(x))
-		x = F.relu(self.deconv2(x))
-		x = F.relu(self.outputdeconv(x))
-		return x
+	def reparamaterize(self, mu, logvar):
+		if self.training:
+			std = logvar.mul(0.5).exp_()
+			eps = Variable(std.data.new(std.size()).normal_())
+			return eps.mul(std).add_(mu)
+		else:
+			return mu
 
+	def decode(self, z):
+		# print('decoding')
+		# print(z.size())
+		z = self.relu(self.dfc1_bn(self.dfc1(z)))
+		# print(z.size())
+		z = self.relu(self.dfc2_bn(self.dfc2(z))).view(-1, self.params['conv2_output_size'], 25, 25)
+		# print(z.size())
+		z = self.relu(self.bn1d(self.deconv1(z)))
+		# print(z.size())
+		z = self.relu(self.deconv2(z))
+		# print(z.size())
+		z = z.view(-1, 3, 100, 100)
+		return z
 
-def processImage(image, x_size, y_size):
-	im_processed = cv2.resize(image, (x_size, y_size))
-	return im_processed
+	def forward1(self, x):
+		mu, logvar = self.encode(x)
+		z = self.reparamaterize(mu, logvar)
+		return self.decode(z), mu, logvar
 
-def getData(folder, save = False):
-	data = []
-	path = './wikiart/' + folder + '/'
-	for file in os.listdir(path):
-		im = cv2.imread(path + file)
-		im_processed = processImage(im, image_x, image_y)
-		if save:
-			cv2.imwrite('./resized/' + folder + '/' + file, im_processed)
-		data.append(np.array(im_processed))
-	return np.array(data)
-
-
-
-
-
-
-
-
-
-#INPUTS:
-image_x = 1000
-image_y = 1000
-input_size = image_x * image_y
-latent_vector_size = 50
-conv1_output_size = 20
-conv1_kernel_size = 10
-stride1 = 2
-conv2_output_size = 80
-conv2_kernel_size = 20
-stride2 = 2
-hidden1_size = 200
-hidden2_size = 200
-deconv1_output_size = 50
-deconv1_kernel_size = 20
-deconv2_output_size = 50
-deconv2_kernel_size = 20
-learning_rate = 0.1
-dataset = 'Pointillism'
-
-getData(dataset)
 
