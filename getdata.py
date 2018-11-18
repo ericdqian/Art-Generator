@@ -18,8 +18,10 @@ class Loader:
 		train_set = datasets.ImageFolder(root = './data/touse/', transform = transform_train)
 		self.train_loader = DataLoader(train_set, batch_size=params['batch_size'], shuffle=params['shuffle'],
 									   **kwargs)
+		self.train_set = train_set
 
 		test_set = datasets.ImageFolder(root = './data/touse/', transform = transform_test)
 		self.test_loader = DataLoader(test_set, batch_size=params['batch_size'], shuffle=False,
 									  **kwargs)
+		self.test_set = test_set
 

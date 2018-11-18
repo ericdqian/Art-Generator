@@ -7,7 +7,7 @@ def processImage(image, x_size, y_size):
 	im_processed = cv2.resize(image, (x_size, y_size))
 	return im_processed
 
-def getRawData(folder, save = False):
+def getRawData(folder, image_x, image_y, save = False):
 	data = []
 	path = './data/wikiart/' + folder + '/'
 	for file in os.listdir(path):
@@ -31,5 +31,5 @@ def getAllData(save = False):
 	for dir in os.listdir(path):
 		getRawData(dir)
 
-
-getAllData(save = True)
+getRawData('Pointillism', 128, 128, save = True)
+# getAllData(save = True)
