@@ -1,4 +1,5 @@
 from torch.autograd import Variable
+import torchvision.utils as tvut
 from torch import optim
 import torch
 
@@ -8,13 +9,14 @@ from tqdm import tqdm
 import numpy as np
 
 class Trainer:
-	def __init__(self, model, loss, train, test, params):
+	def __init__(self, model, loss, data, params):
 		self.model = model
 		self.params = params
 		self.params['start_epoch'] = 0
 
-		self.train_loader = train
-		self.test_loader = test
+		self.train_loader = data.train_loader
+		self.valid_loader = data.valid_loader
+		self.data = data
 
 		self.loss = loss
 		self.optimizer = self.get_optimizer()
@@ -49,8 +51,18 @@ class Trainer:
 				'state_dict': self.model.state_dict(),
 				'optimizer': self.optimizer.state_dict(),
 			})
+			self.print_image("training/epoch"+str(epoch))
 			# if epoch % self.args.test_every == 0:
 			#     self.test(epoch)
+
+	def print_image(self, name, rand=False):
+		batch1 = self.data.train_set[0][0].unsqueeze(0)
+		inp = Variable(batch1)
+		self.model.eval()
+		mu, logvar = self.model.encode(batch1)
+		normalized_version = self.model.decode(mu)
+		tvut.save_image(self.data.un_norm(normalized_version[0]), name+".png")
+		self.model.train() # Set the model back in training mode
 
 	def get_optimizer(self):
 		return optim.Adam(self.model.parameters(), lr=self.params['learning_rate'],
