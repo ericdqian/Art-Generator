@@ -63,7 +63,7 @@ class Trainer:
 			param_group['lr'] = learning_rate
 		return learning_rate
 
-	def save_checkpoint(self, state, is_best=False, filename='checkpoint.pth.tar'):
+	def save_checkpoint(self, state, is_best=False, filename='checkpoint1.pth.tar'):
 		'''
 		a function to save checkpoint of the training
 		:param state: {'epoch': cur_epoch + 1, 'state_dict': self.model.state_dict(),
