@@ -1,12 +1,14 @@
 from torch.autograd import Variable
 from torch import optim
 import torch
+import torchvision.utils as tvut
 
 from tensorboardX import SummaryWriter
 import shutil
 from tqdm import tqdm
 import numpy as np
 import torch as nn
+
 
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
@@ -33,9 +35,9 @@ class Trainer:
 			loss_list = []
 			print("epoch {}...".format(epoch))
 			for batch_idx, (data, _) in enumerate(tqdm(self.train_loader)):
-				# if nn.cuda.is_available():
-				# 	data = data.cuda()
-				data = Variable(data)
+				if nn.cuda.is_available():
+					data = data.cuda()
+				data = Variable(data).cuda()
 				self.optimizer.zero_grad()
 				recon_batch, mu, logvar = self.model.forward1(data)
 				loss = self.loss(recon_batch, data, mu, logvar)
@@ -58,12 +60,12 @@ class Trainer:
 				self.print_image("training/epoch"+str(epoch))
 
 	def print_image(self, name, rand=False):
-		batch1 = self.data.train_set[0][0].unsqueeze(0)
-		inp = Variable(batch1)
+		batch1 = self.data.train_set[0][0].unsqueeze(0).cuda()
+		inp = Variable(batch1).cuda()
 		self.model.eval()
 		mu, logvar = self.model.encode(batch1)
 		normalized_version = self.model.decode(mu)
-		tvut.save_image(self.data.un_norm(normalized_version[0]), name+".png")
+		tvut.save_image(normalized_version[0], name+".png")
 		self.model.train() # Set the model back in training mode
 
 	def get_optimizer(self):

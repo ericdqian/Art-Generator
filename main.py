@@ -15,7 +15,7 @@ torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 vae_params = {'conv1_output_size' : 32, 'conv1_kernel_size' : 3, 'stride1c' : 2, 
 			  'conv2_output_size' : 64, 'conv2_kernel_size' : 3, 'stride2c' : 2, 
-			  'conv3_output_size' : 128, 'conv3_kernel_size' : 3, 'stride3c' : 2, 
+			  'conv3_output_size' : 64, 'conv3_kernel_size' : 3, 'stride3c' : 2, 
 			  'conv4_output_size' : 256, 'conv4_kernel_size' : 3, 'stride4c' : 2, 
 			  'conv5_output_size' : 512, 'conv5_kernel_size' : 3, 'stride5c' : 2, 
 			  'hidden1_size' : 500, 'hidden2_size' : 200, 
@@ -24,8 +24,8 @@ vae_params = {'conv1_output_size' : 32, 'conv1_kernel_size' : 3, 'stride1c' : 2,
 			  'deconv2_output_size' : 64, 'deconv2_kernel_size' : 3, 'stride1d' : 2,
 			  'deconv3_output_size' : 32, 'deconv3_kernel_size' : 3, 'stride1d' : 2, 
 			  'deconv4_output_size' : 3, 'deconv4_kernel_size' : 3, 'stride2d' : 2, 
-			  'latent_vector_size': 400, 'd' : 128}
-data_load_params = {'batch_size' : 10, 'shuffle' : True, 'cuda': True, 'dataloader_workers' : 1, 'pin_memory' : True}
+			  'latent_vector_size': 400, 'd' :128}
+data_load_params = {'batch_size' : 5, 'shuffle' : True, 'cuda': True, 'dataloader_workers' : 1, 'pin_memory' : True}
 
 data = Loader(data_load_params)
 model = VAE(vae_params)
@@ -52,12 +52,12 @@ def gen_image(checkpoint_file):
 
 	# print(data.train_set[0][0])
 	# print(data.train_set[0][0].size())
-	batch1 = data.train_set[9][0].unsqueeze(0)
+	batch1 = data.train_set[9][0].unsqueeze(0).cuda()
 	# print(batch1.size())
 
 	inp = Variable(batch1)
 	tvut.save_image(batch1, "goal2.png")
-	print(inp)
+	# print(inp)
 	model.eval()
 	mu, logvar = model.encode(batch1)
 	lat = model.reparamaterize(mu, logvar)
@@ -69,8 +69,8 @@ def gen_image(checkpoint_file):
 	
 def create_parser():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--epochs', type = int, default = 20)
-	parser.add_argument('--test_every', type = int, default = 10)
+	parser.add_argument('--epochs', type = int, default = 26)
+	parser.add_argument('--test_every', type = int, default = 5)
 	return parser
 
 
