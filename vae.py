@@ -12,6 +12,7 @@ from glob import glob
 from torchvision import transforms, utils
 from torch.autograd import Variable
 
+torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 class VAE(nn.Module):
 	def __init__(self, params):
@@ -92,6 +93,8 @@ class VAE(nn.Module):
 		self.relu = nn.LeakyReLU(0.05)
 
 	def encode(self, x):
+		print(next(self.parameters()).is_cuda)
+		self.conv1(x)
 		x = self.relu(self.bn1c(self.conv1(x)))
 		x = self.relu(self.bn2c(self.conv2(x)))
 		x = self.relu(self.bn3c(self.conv3(x)))

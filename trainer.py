@@ -6,30 +6,35 @@ from tensorboardX import SummaryWriter
 import shutil
 from tqdm import tqdm
 import numpy as np
+import torch as nn
+
+torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 class Trainer:
-	def __init__(self, model, loss, train, test, params):
+	def __init__(self, model, loss, data, params):
 		self.model = model
 		self.params = params
 		self.params['start_epoch'] = 0
 
-		self.train_loader = train
-		self.test_loader = test
+		self.data = data
+		self.train_loader = data.train_loader
+		self.test_loader = data.test_loader
 
 		self.loss = loss
 		self.optimizer = self.get_optimizer()
 		# print()
 		self.summary_writer = SummaryWriter(log_dir=self.params['summary_dir'])
+		print(next(model.parameters()).is_cuda)
 
-	def train(self):
+	def train(self, opts):
 		self.model.train()
 		kwargs = {}
 		for epoch in range(self.params['start_epoch'], self.params['num_epochs']):
 			loss_list = []
 			print("epoch {}...".format(epoch))
 			for batch_idx, (data, _) in enumerate(tqdm(self.train_loader)):
-				if self.params['cuda']:
-					data = data.cuda()
+				# if nn.cuda.is_available():
+				# 	data = data.cuda()
 				data = Variable(data)
 				self.optimizer.zero_grad()
 				recon_batch, mu, logvar = self.model.forward1(data)
@@ -49,8 +54,17 @@ class Trainer:
 				'state_dict': self.model.state_dict(),
 				'optimizer': self.optimizer.state_dict(),
 			})
-			# if epoch % self.args.test_every == 0:
-			#     self.test(epoch)
+			if epoch % opts.test_every == 0:
+				self.print_image("training/epoch"+str(epoch))
+
+	def print_image(self, name, rand=False):
+		batch1 = self.data.train_set[0][0].unsqueeze(0)
+		inp = Variable(batch1)
+		self.model.eval()
+		mu, logvar = self.model.encode(batch1)
+		normalized_version = self.model.decode(mu)
+		tvut.save_image(self.data.un_norm(normalized_version[0]), name+".png")
+		self.model.train() # Set the model back in training mode
 
 	def get_optimizer(self):
 		return optim.Adam(self.model.parameters(), lr=self.params['learning_rate'],
