@@ -1,4 +1,5 @@
 .DS_Store
 /*.log
-data/**
+data/wikiart
 runs/**
+gans/
