@@ -3,3 +3,6 @@
 data/wikiart
 runs/**
 gans/
+/vaegan/303_lv400/checkpoints_cyclegan/
+/venv/
+/vaegan/303_lv400_1/checkpoints_cyclegan/
