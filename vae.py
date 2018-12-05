@@ -12,7 +12,7 @@ from glob import glob
 from torchvision import transforms, utils
 from torch.autograd import Variable
 
-torch.set_default_tensor_type('torch.cuda.FloatTensor')
+
 
 class VAE(nn.Module):
 	def __init__(self, params):
@@ -26,7 +26,7 @@ class VAE(nn.Module):
 
 		#encoder 
 		self.conv1 = nn.Conv2d(3, self.params['conv1_output_size'], kernel_size = self.params['conv1_kernel_size'], 
-			padding = self.params['conv1_kernel_size']//2, stride = 2)
+			padding = self.params['conv1_kernel_size']//2, stride = 2).cuda()
 		self.bn1c = nn.BatchNorm2d(self.params['conv1_output_size'])
 		self.conv2 = nn.Conv2d(self.params['conv1_output_size'], self.params['conv2_output_size'], kernel_size = self.params['conv2_kernel_size'], 
 			padding = self.params['conv2_kernel_size']//2, stride = 2)
@@ -34,17 +34,17 @@ class VAE(nn.Module):
 		self.conv3 = nn.Conv2d(self.params['conv2_output_size'], self.params['conv3_output_size'], kernel_size = self.params['conv3_kernel_size'], 
 			padding = self.params['conv3_kernel_size']//2, stride = 2)
 		self.bn3c = nn.BatchNorm2d(self.params['conv3_output_size'])
-		self.conv4 = nn.Conv2d(self.params['conv3_output_size'], self.params['conv4_output_size'], kernel_size = self.params['conv4_kernel_size'], 
-			padding = self.params['conv4_kernel_size']//2, stride = 2)
-		self.bn4c = nn.BatchNorm2d(self.params['conv4_output_size'])
-		self.conv5 = nn.Conv2d(self.params['conv4_output_size'], self.params['conv5_output_size'], kernel_size = self.params['conv5_kernel_size'], 
-			padding = self.params['conv5_kernel_size']//2, stride = 2)
-		self.bn5c = nn.BatchNorm2d(self.params['conv5_output_size'])
+		# self.conv4 = nn.Conv2d(self.params['conv3_output_size'], self.params['conv4_output_size'], kernel_size = self.params['conv4_kernel_size'], 
+		# 	padding = self.params['conv4_kernel_size']//2, stride = 2)
+		# self.bn4c = nn.BatchNorm2d(self.params['conv4_output_size'])
+		# self.conv5 = nn.Conv2d(self.params['conv4_output_size'], self.params['conv5_output_size'], kernel_size = self.params['conv5_kernel_size'], 
+		# 	padding = self.params['conv5_kernel_size']//2, stride = 2)
+		# self.bn5c = nn.BatchNorm2d(self.params['conv5_output_size'])
 
-		self.l1 = nn.Linear(4 * 4 * self.params['conv5_output_size'], 4 * 4 * self.params['conv5_output_size'])
-		self.l1bn = nn.BatchNorm1d(4 * 4 * self.params['conv5_output_size'])
+		self.l1 = nn.Linear(16 * 16 * self.params['conv3_output_size'], 16 * 16 * self.params['conv3_output_size'])
+		self.l1bn = nn.BatchNorm1d(16 * 16 * self.params['conv3_output_size'])
 
-		self.efc1 = nn.Linear(4 * 4 * self.params['conv5_output_size'], self.params['latent_vector_size'])
+		self.efc1 = nn.Linear(16 * 16 * self.params['conv3_output_size'], self.params['latent_vector_size'])
 		self.efc1_bn = nn.BatchNorm1d(self.params['latent_vector_size'])
 		self.efc21 = nn.Linear(self.params['latent_vector_size'], self.params['latent_vector_size'])
 		self.efc22 = nn.Linear(self.params['latent_vector_size'], self.params['latent_vector_size'])
@@ -93,16 +93,18 @@ class VAE(nn.Module):
 		self.relu = nn.LeakyReLU(0.05)
 
 	def encode(self, x):
-		print(next(self.parameters()).is_cuda)
-		self.conv1(x)
+		# x = self.relu(self.bn1c(self.conv1(x)))
+		# x = self.relu(self.bn2c(self.conv2(x)))
+		# x = self.relu(self.bn3c(self.conv3(x)))
+		# x = self.relu(self.bn4c(self.conv4(x)))
+		# x = self.relu(self.bn5c(self.conv5(x))).view(-1, 4 * 4 * self.params['conv5_output_size'])
+		# x = self.relu(self.efc1_bn(self.efc1(x)))
+		# return self.efc21(x), self.efc22(x)
+
 		x = self.relu(self.bn1c(self.conv1(x)))
 		x = self.relu(self.bn2c(self.conv2(x)))
-		x = self.relu(self.bn3c(self.conv3(x)))
-		x = self.relu(self.bn4c(self.conv4(x)))
-		x = self.relu(self.bn5c(self.conv5(x))).view(-1, 4 * 4 * self.params['conv5_output_size'])
-		# x = self.relu(self.l1bn(self.l1(x)))
+		x = self.relu(self.bn3c(self.conv3(x))).view(-1, 16 * 16 * self.params['conv3_output_size'])
 		x = self.relu(self.efc1_bn(self.efc1(x)))
-		# print(x.size())
 		return self.efc21(x), self.efc22(x)
 
 	def reparamaterize(self, mu, logvar):
@@ -124,7 +126,7 @@ class VAE(nn.Module):
 		# z = self.relu(self.deconv4(z))
 		# z = z.view(-1, 3, 128, 128)
 		# return z
-
+		z.cuda()
 		# z = z.view(-1, self.params['latent_vector_size'], 4, 4)
 		# print(z.size())
 		z = self.relu(self.deconv_linear_bn(self.deconv_linear(z)).view(-1, self.params['d'] * 16, 4, 4))
