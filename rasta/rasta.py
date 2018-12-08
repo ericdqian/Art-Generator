@@ -181,11 +181,11 @@ if __name__ == '__main__':
 
     criterion = nn.CrossEntropyLoss()
 
-    optimizer_ft = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
-    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer_ft, step_size=5, gamma=0.1)
+    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
-    model = train_model(model, wikiart_loader, criterion, optimizer_ft, exp_lr_scheduler, use_gpu=use_gpu, num_epochs=25)
+    model = train_model(model, wikiart_loader, criterion, optimizer, exp_lr_scheduler, use_gpu=use_gpu, num_epochs=25)
     create_dir('runs/models/') 
     torch.save({
         'state_dict': model.state_dict(),
