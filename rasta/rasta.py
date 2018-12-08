@@ -51,7 +51,6 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
 
             # Iterate over data
             for inputs, labels in dataloader[phase]:
-
                 if use_gpu:
                     inputs = Variable(inputs.cuda())
                     labels = Variable(labels.cuda())
@@ -74,9 +73,9 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
-                running_corrects_1 += acc1
-                running_corrects_3 += acc3
-                running_corrects_5 += acc5
+                running_corrects_1 += acc1.data[0]
+                running_corrects_3 += acc3.data[0]
+                running_corrects_5 += acc5.data[0]
 
             epoch_loss = running_loss / len(dataloader[phase])
             epoch_acc_1 = running_corrects_1.double() / len(dataloader[phase])
