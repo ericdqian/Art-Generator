@@ -4,6 +4,9 @@ import numpy as np
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision import transforms, datasets
 
+def get_classes(file_path):
+    return os.listdir(file_path)
+
 class WikiArtDataLoader:
     def __init__(self, file_path, batch_size, data_split, random_seed, num_workers=4, pin_memory=False):
         """
