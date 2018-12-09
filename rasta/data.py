@@ -4,8 +4,33 @@ import numpy as np
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision import transforms, datasets
 
+import matplotlib.pyplot as plt
+
 def get_classes(file_path):
     return os.listdir(file_path)
+
+def plot_images(images, cls_true, file_path, cls_pred=None):
+    fig, axes = plt.subplots(3, 3)
+    label_names = get_classes(file_path)
+
+    for i, ax in enumerate(axes.flat):
+        # plot img
+        ax.imshow(images[i, :, :, :], interpolation='spline16')
+
+        # show true & predicted classes
+        cls_true_name = label_names[cls_true[i]]
+        if cls_pred is None:
+            xlabel = "{0} ({1})".format(cls_true_name, cls_true[i])
+        else:
+            cls_pred_name = label_names[cls_pred[i]]
+            xlabel = "True: {0}\nPred: {1}".format(
+                cls_true_name, cls_pred_name
+            )
+        ax.set_xlabel(xlabel)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    plt.show()
 
 class WikiArtDataLoader:
     def __init__(self, file_path, batch_size, data_split, random_seed, num_workers=4, pin_memory=False):
@@ -112,3 +137,15 @@ if __name__ == "__main__":
     print(imgs.size())
     print(imgs)
     print(classes)
+
+    # test plotting
+    # sample_loader = torch.utils.data.DataLoader(
+    #     wikiart_loader.train_dataset, batch_size=9, shuffle=False,
+    # )
+    # data_iter = iter(sample_loader)
+    # for _ in range(30):
+    #     # to get some color images
+    #     data_iter.next()
+    # images, labels = data_iter.next()
+    # X = images.numpy().transpose([0, 2, 3, 1])
+    # plot_images(X, labels, file_path='data/wikiart')
