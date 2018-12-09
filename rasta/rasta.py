@@ -64,15 +64,15 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
             running_corrects_3 = 0
             running_corrects_5 = 0
 
-            # test data iter
-            iter_dl = iter(dataloader[phase])
-            test_data = []
-            for _ in range(10):
-                test_data.append(next(iter_dl))
-            for inputs, labels in test_data:
+            # # test data iter
+            # iter_dl = iter(dataloader[phase])
+            # test_data = []
+            # for _ in range(10):
+            #     test_data.append(next(iter_dl))
+            # for inputs, labels in test_data:
 
             # Iterate over data
-            # for inputs, labels in dataloader[phase]:
+            for inputs, labels in dataloader[phase]:
                 if use_gpu:
                     inputs = Variable(inputs.cuda())
                     labels = Variable(labels.cuda())
