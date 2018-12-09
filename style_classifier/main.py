@@ -14,7 +14,7 @@ Image.MAX_IMAGE_PIXELS = 1000000000
 from data import WikiArtDataLoader, get_classes
 from models import get_model
 
-def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=False, num_epochs=25, 
+def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=False, num_epochs=10, 
                     log_dir="runs/logs/cnn", log_filename="default"
                 ):
     """ Trains model
@@ -192,7 +192,7 @@ def create_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def run(perc=0.0, lr=0.01, where=where_retrain):
+def run(perc=0.0, lr=0.01, where="end"):
     perc = 0.0
     lr = 0.01
     log_filename = 'perc-{}_lr-{}'.format(perc, lr)
@@ -220,7 +220,7 @@ def run(perc=0.0, lr=0.01, where=where_retrain):
     optimizer = optim.Adam(model.parameters(), lr=lr)
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
-    model = train_model(model, wikiart_loader, criterion, optimizer, exp_lr_scheduler, use_gpu=use_gpu, num_epochs=25, log_dir="runs/logs/cnn", log_filename=log_filename)
+    model = train_model(model, wikiart_loader, criterion, optimizer, exp_lr_scheduler, use_gpu=use_gpu, num_epochs=10, log_dir="runs/logs/cnn", log_filename=log_filename)
     torch.save({
         'state_dict': model.state_dict(),
         'optimizer': optimizer.state_dict(),
