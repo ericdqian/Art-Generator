@@ -1,6 +1,7 @@
 import os
 import time
 import copy
+import argparse
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -190,7 +191,7 @@ def create_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-if __name__ == '__main__':
+def run(perc=0.0, lr=0.01):
     perc = 0.0
     lr = 0.01
     log_filename = 'perc-{}_lr-{}'.format(perc, lr)
@@ -219,7 +220,6 @@ if __name__ == '__main__':
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
     model = train_model(model, wikiart_loader, criterion, optimizer, exp_lr_scheduler, use_gpu=use_gpu, num_epochs=25, log_dir="runs/logs/cnn", log_filename=log_filename)
-    create_dir('runs/models/') 
     torch.save({
         'state_dict': model.state_dict(),
         'optimizer': optimizer.state_dict(),
@@ -230,3 +230,17 @@ if __name__ == '__main__':
         'steplr_size': 5,
         'steplr_gamma': 0.1,
     }, 'runs/models/resnet50_{}.pth.tar'.format(log_filename))
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--perc', action="store", dest='perc', default=0.0,
+                        help='Percentage of layers from output to retrain')
+    parser.add_argument('--lr', action="store", dest='lr', default=0.01,
+                        help='Learning rate')
+
+    args = parser.parse_args()
+
+    perc = args.perc
+    lr = args.lr
+
+    run(perc=perc, lr=lr)
