@@ -15,7 +15,7 @@ from data import WikiArtDataLoader, get_classes
 from models import get_model
 
 def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=False, num_epochs=25, 
-                    log_dir="runs/logs/cnn", log_filename="default.txt"
+                    log_dir="runs/logs/cnn", log_filename="default"
                 ):
     """ Trains model
 
@@ -42,7 +42,7 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
     best_acc_5 = 0.0
 
     create_dir(log_dir)
-    log_file = os.path.join(log_dir, log_filename)
+    log_file = os.path.join(log_dir, log_filename, '.txt')
     log = open(log_file, 'w')
 
     for epoch in range(num_epochs):
@@ -114,7 +114,7 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
                 'optimizer': optimizer.state_dict(),
-            })
+            }, filename=log_filename)
 
             # deep copy the model
             if phase == 'val':
@@ -171,7 +171,7 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
 
-def save_checkpoint(state, is_best=False, checkpoint_dir='runs/checkpoints/', filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best=False, checkpoint_dir='runs/checkpoints/', filename=''):
     '''
     a function to save checkpoint of the training
     :param state: {'epoch': cur_epoch + 1, 'state_dict': self.model.state_dict(),
@@ -180,7 +180,7 @@ def save_checkpoint(state, is_best=False, checkpoint_dir='runs/checkpoints/', fi
     :param filename: the name of the saved file
     '''
     # create_dir(checkpoint_dir)
-    torch.save(state, os.path.join(checkpoint_dir + filename))
+    torch.save(state, os.path.join(checkpoint_dir + 'checkpoint_{}.pth.tar'.format(log_filename)))
     # if is_best:
     #     shutil.copyfile(self.args.checkpoint_dir + filename,
     #                     self.args.checkpoint_dir + 'model_best.pth.tar')
@@ -191,7 +191,7 @@ def create_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def run(perc=0.0, lr=0.01):
+def run(perc=0.0, lr=0.01, where=where_retrain):
     perc = 0.0
     lr = 0.01
     log_filename = 'perc-{}_lr-{}'.format(perc, lr)
@@ -209,7 +209,7 @@ def run(perc=0.0, lr=0.01):
 
     wikiart_loader = WikiArtDataLoader(data_path, 32, (0.8, 0.2), random_seed=42, num_workers=num_workers, pin_memory=pin_memory)
 
-    model = get_model("resnet50", data_path, percentage_retrain=perc)
+    model = get_model("resnet50", data_path, percentage_retrain=perc, where=where_retrain)
 
     if use_gpu:
         model = model.cuda()
@@ -225,10 +225,12 @@ def run(perc=0.0, lr=0.01):
         'optimizer': optimizer.state_dict(),
         'retrain': 'last_layer',
         'optimizer': 'sgd',
-        'init_lr': 0.001,
-        'momentum': 0.9,
+        'init_lr': lr,
+        # 'momentum': 0.9,
         'steplr_size': 5,
         'steplr_gamma': 0.1,
+        'perc': perc,
+        'where': where_retrain,
     }, 'runs/models/resnet50_{}.pth.tar'.format(log_filename))
 
 if __name__ == '__main__':
@@ -237,10 +239,13 @@ if __name__ == '__main__':
                         help='Percentage of layers from output to retrain')
     parser.add_argument('--lr', action="store", dest='lr', default=0.01,
                         help='Learning rate')
+    parser.add_argument('--where_retrain', action="store", dest='where_retrain', default="end",
+                        help='Where in model the layers are retrained')
 
     args = parser.parse_args()
 
     perc = args.perc
     lr = args.lr
+    where_retrain = args.where_retrain
 
-    run(perc=perc, lr=lr)
+    run(perc=perc, lr=lr, where=where_retrain)
