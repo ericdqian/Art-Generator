@@ -43,13 +43,13 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
 
     create_dir(log_dir)
     log_file = os.path.join(log_dir, log_filename, '.txt')
-    log = open(log_file, 'w')
+    log = open(log_file, 'w+')
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch + 1, num_epochs))
         print('-' * 10)
-        log.write('Epoch {}/{}'.format(epoch + 1, num_epochs))
-        log.write('-' * 10)
+        log.write('Epoch {}/{}\n'.format(epoch + 1, num_epochs))
+        log.write('-' * 10 + '\n')
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'valid']:
@@ -108,7 +108,7 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
             print('{} Loss: {:.4f} Acc@1: {:.4f} Acc@3: {:.4f} Acc@5: {:.4f}'.format(
                 phase, epoch_loss, epoch_acc_1, epoch_acc_3, epoch_acc_5))
 
-            log.write('{} Loss: {:.4f} Acc@1: {:.4f} Acc@3: {:.4f} Acc@5: {:.4f}'.format(
+            log.write('{} Loss: {:.4f} Acc@1: {:.4f} Acc@3: {:.4f} Acc@5: {:.4f}\n'.format(
                 phase, epoch_loss, epoch_acc_1, epoch_acc_3, epoch_acc_5))
             save_checkpoint({
                 'epoch': epoch + 1,
@@ -131,6 +131,7 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
                     best_model_wts_5 = copy.deepcopy(model.state_dict())
 
         print()
+        log.write('\n')
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
@@ -140,11 +141,11 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
     print('Best val Acc top-5: {:4f}'.format(best_acc_5))
     
     log.write(
-        'Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60)
+        'Training complete in {:.0f}m {:.0f}s\n'.format(time_elapsed // 60, time_elapsed % 60)
     )
-    log.write('Best val Acc top-1: {:4f} top-3: {:4f} top-5 {:4f}'.format(best_acc_1, model_acc_3, model_acc_5))
-    log.write('Best val Acc top-3: {:4f}'.format(best_acc_3))
-    log.write('Best val Acc top-5: {:4f}'.format(best_acc_5))
+    log.write('Best val Acc top-1: {:4f} top-3: {:4f} top-5 {:4f}\n'.format(best_acc_1, model_acc_3, model_acc_5))
+    log.write('Best val Acc top-3: {:4f}\n'.format(best_acc_3))
+    log.write('Best val Acc top-5: {:4f}\n'.format(best_acc_5))
 
     log.close()
 
