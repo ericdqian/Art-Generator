@@ -23,7 +23,7 @@ class WikiArtDataLoader:
                 for ratio in data_split:
                     if ratio < 0 or ratio > 1:
                         return False
-                return data_split[0]+data_split[1] < 1
+                return data_split[0]+data_split[1] <= 1
             if len(data_split) == 3:
                 for ratio in data_split:
                     if ratio < 0 or ratio > 1:

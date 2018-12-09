@@ -6,14 +6,16 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.optim as optim
 from torch.autograd import Variable
-from tensorboardX import SummaryWriter
 
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = 1000000000
 
 from data import WikiArtDataLoader, get_classes
+from models import get_model
 
-def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=False, num_epochs=25, log_dir="runs/logs/cnn"):
+def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=False, num_epochs=25, 
+                    log_dir="runs/logs/cnn", log_filename="default.txt"
+                ):
     """ Trains model
 
     Args:
@@ -24,7 +26,8 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
         scheduler: learning rate scheduler
         num_epochs (int): number of epochs (passes thru data set) to perform
         use_gpu (bool): whether a GPU is being used or not
-        log_dir (str): directory for SummaryWriter to log events
+        log_dir (str): directory for logs
+        log_filename (str): file name for log for this run
     """
     since = time.time()
 
@@ -38,11 +41,14 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
     best_acc_5 = 0.0
 
     create_dir(log_dir)
-    writer = SummaryWriter(log_dir=log_dir)
+    log_file = os.path.join(log_dir, log_filename)
+    log = open(log_file, 'w')
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch + 1, num_epochs))
         print('-' * 10)
+        log.write('Epoch {}/{}'.format(epoch + 1, num_epochs))
+        log.write('-' * 10)
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'valid']:
@@ -58,17 +64,15 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
             running_corrects_3 = 0
             running_corrects_5 = 0
 
-            # # test data iter
-            # iter_dl = iter(dataloader[phase])
-            # test_data = []
-            # for _ in range(10):
-            #     test_data.append(next(iter_dl))
-            # for inputs, labels in test_data:
+            # test data iter
+            iter_dl = iter(dataloader[phase])
+            test_data = []
+            for _ in range(10):
+                test_data.append(next(iter_dl))
+            for inputs, labels in test_data:
 
             # Iterate over data
-            
-
-            for inputs, labels in dataloader[phase]:
+            # for inputs, labels in dataloader[phase]:
                 if use_gpu:
                     inputs = Variable(inputs.cuda())
                     labels = Variable(labels.cuda())
@@ -103,10 +107,8 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
             print('{} Loss: {:.4f} Acc@1: {:.4f} Acc@3: {:.4f} Acc@5: {:.4f}'.format(
                 phase, epoch_loss, epoch_acc_1, epoch_acc_3, epoch_acc_5))
 
-            writer.add_scalar('training/{}/loss'.format(phase), epoch_loss, epoch+1)
-            writer.add_scalar('training/{}/acc@1'.format(phase), epoch_acc_1, epoch+1)
-            writer.add_scalar('training/{}/acc@3'.format(phase), epoch_acc_3, epoch+1)
-            writer.add_scalar('training/{}/acc@5'.format(phase), epoch_acc_5, epoch+1)
+            log.write('{} Loss: {:.4f} Acc@1: {:.4f} Acc@3: {:.4f} Acc@5: {:.4f}'.format(
+                phase, epoch_loss, epoch_acc_1, epoch_acc_3, epoch_acc_5))
             save_checkpoint({
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
@@ -117,6 +119,8 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
             if phase == 'val':
                 if epoch_acc_1 > best_acc_1:
                     best_acc_1 = epoch_acc_1
+                    model_acc_3 = epoch_acc_3
+                    model_acc_5 = epoch_acc_5
                     best_model_wts_1 = copy.deepcopy(model.state_dict())
                 if epoch_acc_3 > best_acc_3:
                     best_acc_3 = epoch_acc_3
@@ -130,11 +134,21 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
-    print('Best val Acc: {:4f}'.format(best_acc))
-    writer.add_scalar('training/val/acc', best_acc, -1)
+    print('Best val Acc top-1: {:4f} top-3: {:4f} top-5 {:4f}'.format(best_acc_1, model_acc_3, model_acc_5))
+    print('Best val Acc top-3: {:4f}'.format(best_acc_3))
+    print('Best val Acc top-5: {:4f}'.format(best_acc_5))
+    
+    log.write(
+        'Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60)
+    )
+    log.write('Best val Acc top-1: {:4f} top-3: {:4f} top-5 {:4f}'.format(best_acc_1, model_acc_3, model_acc_5))
+    log.write('Best val Acc top-3: {:4f}'.format(best_acc_3))
+    log.write('Best val Acc top-5: {:4f}'.format(best_acc_5))
+
+    log.close()
 
     # load best model weights
-    model.load_state_dict(best_model_wts)
+    model.load_state_dict(best_model_wts_1)
     return model
 
 def accuracy(output, target, topk=(1,)):
@@ -164,7 +178,7 @@ def save_checkpoint(state, is_best=False, checkpoint_dir='runs/checkpoints/', fi
     :param is_best: boolean to save the checkpoint aside if it has the best score so far
     :param filename: the name of the saved file
     '''
-    create_dir(checkpoint_dir)
+    # create_dir(checkpoint_dir)
     torch.save(state, os.path.join(checkpoint_dir + filename))
     # if is_best:
     #     shutil.copyfile(self.args.checkpoint_dir + filename,
@@ -177,6 +191,10 @@ def create_dir(directory):
         os.makedirs(directory)
 
 if __name__ == '__main__':
+    perc = 0.0
+    lr = 0.01
+    log_filename = 'perc-{}_lr-{}'.format(perc, lr)
+
     data_path = 'data/wikiart'
 
     use_gpu = False
@@ -188,29 +206,19 @@ if __name__ == '__main__':
         pin_memory = True
         print('Using GPU')
 
-    wikiart_loader = WikiArtDataLoader(data_path, 32, (0.8, 0.1, 0.1), random_seed=42, num_workers=num_workers, pin_memory=pin_memory)
+    wikiart_loader = WikiArtDataLoader(data_path, 32, (0.8, 0.2), random_seed=42, num_workers=num_workers, pin_memory=pin_memory)
 
-    model = models.resnet50(pretrained=True)
-
-    # freeze model params
-    for param in model.parameters():
-        param.requires_grad = False
-
-    # replace output layer
-    num_ftrs = model.fc.in_features
-    num_styles = len(get_classes(data_path))
-    model.fc = nn.Linear(num_ftrs, num_styles)
+    model = get_model("resnet50", data_path, percentage_retrain=perc)
 
     if use_gpu:
         model = model.cuda()
 
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
-    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
-
-    model = train_model(model, wikiart_loader, criterion, optimizer, exp_lr_scheduler, use_gpu=use_gpu, num_epochs=25)
+    model = train_model(model, wikiart_loader, criterion, optimizer, exp_lr_scheduler, use_gpu=use_gpu, num_epochs=25, log_dir="runs/logs/cnn", log_filename=log_filename)
     create_dir('runs/models/') 
     torch.save({
         'state_dict': model.state_dict(),
@@ -221,4 +229,4 @@ if __name__ == '__main__':
         'momentum': 0.9,
         'steplr_size': 5,
         'steplr_gamma': 0.1,
-    }, 'runs/models/resnet50_2018-12-8.pth.tar')
+    }, 'runs/models/resnet50_{}.pth.tar'.format(log_filename))
