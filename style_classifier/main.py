@@ -4,7 +4,6 @@ import copy
 import argparse
 import torch
 import torch.nn as nn
-import torchvision.models as models
 import torch.optim as optim
 from torch.autograd import Variable
 
@@ -42,7 +41,7 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
     best_acc_5 = 0.0
 
     create_dir(log_dir)
-    log_file = os.path.join(log_dir, log_filename, '.txt')
+    log_file = os.path.join(log_dir, log_filename+'.txt')
     log = open(log_file, 'w+')
 
     for epoch in range(num_epochs):
