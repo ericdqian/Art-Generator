@@ -21,12 +21,21 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
         dataloader: dataloader, with at least keys 'train' and 'valid'
         criterion: loss function, e.g. nn.CrossEntropyLoss()
         optimizer: optimizer function
-
+        scheduler: learning rate scheduler
+        num_epochs (int): number of epochs (passes thru data set) to perform
+        use_gpu (bool): whether a GPU is being used or not
+        log_dir (str): directory for SummaryWriter to log events
     """
     since = time.time()
 
     best_model_wts = copy.deepcopy(model.state_dict())
-    best_acc = 0.0
+    best_acc_1 = 0.0
+
+    best_model_wts_3 = copy.deepcopy(model.state_dict())
+    best_acc_3 = 0.0
+
+    best_model_wts_5 = copy.deepcopy(model.state_dict())
+    best_acc_5 = 0.0
 
     create_dir(log_dir)
     writer = SummaryWriter(log_dir=log_dir)
@@ -49,7 +58,16 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
             running_corrects_3 = 0
             running_corrects_5 = 0
 
+            # # test data iter
+            # iter_dl = iter(dataloader[phase])
+            # test_data = []
+            # for _ in range(10):
+            #     test_data.append(next(iter_dl))
+            # for inputs, labels in test_data:
+
             # Iterate over data
+            
+
             for inputs, labels in dataloader[phase]:
                 if use_gpu:
                     inputs = Variable(inputs.cuda())
@@ -96,9 +114,16 @@ def train_model(model, dataloader, criterion, optimizer, scheduler, use_gpu=Fals
             })
 
             # deep copy the model
-            if phase == 'val' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
+            if phase == 'val':
+                if epoch_acc_1 > best_acc_1:
+                    best_acc_1 = epoch_acc_1
+                    best_model_wts_1 = copy.deepcopy(model.state_dict())
+                if epoch_acc_3 > best_acc_3:
+                    best_acc_3 = epoch_acc_3
+                    best_model_wts_3 = copy.deepcopy(model.state_dict())
+                if epoch_acc_5 > best_acc_5:
+                    best_acc_5 = epoch_acc_5
+                    best_model_wts_5 = copy.deepcopy(model.state_dict())
 
         print()
 
@@ -181,7 +206,7 @@ if __name__ == '__main__':
 
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
 
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
