@@ -63,26 +63,26 @@ class WikiArtDataLoader:
             print("value error")
             raise ValueError("data_split is not correctly formatted")
 
-        normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 
         transform_train = transforms.Compose([
             # transforms.RandomCrop((224,224)),
             transforms.Resize((224,224)),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            # normalize,
+            normalize,
         ])
         transform_valid = transforms.Compose([
             # transforms.RandomCrop((224,224)),
             transforms.Resize((224,224)),
             transforms.ToTensor(),
-            # normalize,
+            normalize,
         ])
         transform_test = transforms.Compose([
             # transforms.RandomCrop((224,224)),
             transforms.Resize((224,224)),
             transforms.ToTensor(),
-            # normalize,
+            normalize,
         ])
 
         train_dataset = datasets.ImageFolder(file_path, transform=transform_train)
