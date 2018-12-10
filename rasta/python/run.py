@@ -50,7 +50,7 @@ optimizer = args.optimizer
 
 params = vars(args)
 
-name = model_name+'_'+optimizer+'_n-trainable-{n_layers_trainable}'
+name = model_name+'_'+optimizer+'_n-trainable-'+n_layers_trainable
 
 # BUILDING MODEL
 
