@@ -8,6 +8,7 @@ from keras.layers import Dense
 from keras.models import Model
 from keras.optimizers import Adam
 from keras import backend as K
+from keras.utils import multi_gpu_models
 import os
 from os.path import join
 import argparse
@@ -49,7 +50,7 @@ optimizer = args.optimizer
 
 params = vars(args)
 
-name = model_name+'_'+optimizer
+name = model_name+'_'+optimizer+'_n-trainable-{n_layers_trainable}'
 
 # BUILDING MODEL
 
@@ -144,12 +145,12 @@ else:
 if optimizer == 'rmsprop':
     optimizer = 'rmsprop'
 elif optimizer == 'sgd':
-    optimizer = 'sgd':
+    optimizer = 'sgd'
 elif optimizer == 'adam':
     optimizer = 'adam'
 elif optimizer == 'amsgrad':
     optimizer = Adam(amsgrad=True)
 
+model = multi_gpu_model(model, gpus=16)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-model = to_multi_gpu(model, n_gpus=16)
 train_model_from_directory(TRAINING_PATH,model,model_name=name,target_size=size,validation_path=VAL_PATH,epochs = epochs,batch_size = batch_size,horizontal_flip=flip,params=params,preprocessing=args.preprocessing,distortions=args.disto)
