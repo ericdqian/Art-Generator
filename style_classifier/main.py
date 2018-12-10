@@ -180,7 +180,7 @@ def save_checkpoint(state, is_best=False, checkpoint_dir='runs/checkpoints/', fi
     :param filename: the name of the saved file
     '''
     # create_dir(checkpoint_dir)
-    torch.save(state, os.path.join(checkpoint_dir + 'checkpoint_{}.pth.tar'.format(log_filename)))
+    torch.save(state, os.path.join(checkpoint_dir + 'checkpoint_{}.pth.tar'.format(filename)))
     # if is_best:
     #     shutil.copyfile(self.args.checkpoint_dir + filename,
     #                     self.args.checkpoint_dir + 'model_best.pth.tar')
