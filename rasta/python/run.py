@@ -29,8 +29,9 @@ parser.add_argument('-p', action="store",dest='preprocessing',help='Set imagenet
 
 parser.add_argument('--distortions', action="store", type=float,dest='disto',default=0.,help='Activate distortions or not')
 
-parser.add_argument('--train_path', action="store", default=join(PATH, '../../data/wikipaintings/wikipaintings_train'),dest='training_path',help='Path of the training data directory')
-parser.add_argument('--val_path', action="store", default=join(PATH, '../../data/wikipaintings/wikipaintings_val'),dest='validation_path',help='Path of the validation data directory')
+parser.add_argument('--train_path', action="store", default=join(PATH, '../../data/wikiart_rasta/train'),dest='training_path',help='Path of the training data directory')
+parser.add_argument('--val_path', action="store", default=join(PATH, '../../data/wikiart_rasta/val'),dest='validation_path',help='Path of the validation data directory')
+
 parser.add_argument('--opt', action="store", default='rmsprop', dest='optimizer',help='Optimizer to use')
 
 
