@@ -12,7 +12,7 @@ from utils.utils import imagenet_preprocess_input,wp_preprocess_input,custom_pre
 PATH = os.path.dirname(__file__)
 SAVINGS_DIR = join(PATH,'../../savings')
 
-def train_model_from_directory(directory_path,model,model_name ='model',target_size =(256,256) ,batch_size = 64 ,horizontal_flip = False,epochs=30,steps_per_epoch=None,validation_path=None,validation_steps=None,params=None,preprocessing=None,distortions=0.):
+def train_model_from_directory(directory_path, model, model_name ='model',target_size =(256,256), batch_size = 64, horizontal_flip = False,epochs=30,steps_per_epoch=None,validation_path=None,validation_steps=None,params=None,preprocessing=None,distortions=0.):
 
     # Naming and creating folder
     now = datetime.datetime.now()
@@ -20,7 +20,7 @@ def train_model_from_directory(directory_path,model,model_name ='model',target_s
 
     model_name_temp = model_name
     i=0
-    while os.path.exists(join(SAVINGS_DIR,model_name_temp)):
+    while os.path.exists(join(SAVINGS_DIR, model_name_temp)):
         model_name_temp=model_name+'('+str(i)+')'
         i+=1
     MODEL_DIR = join(SAVINGS_DIR,model_name_temp)
@@ -77,7 +77,7 @@ def continue_training(model_path,directory_path,saving=True,target_size =(256,25
         history  = model.fit_generator(train_generator, steps_per_epoch=steps_per_epoch, epochs = epochs,callbacks = [tbCallBack])
 
     if saving:
-        _postsaving(model,history,model_path)
+        _postsaving(model, history, model_path)
     return model
 
 def _presaving(model,model_dir,params):
@@ -92,20 +92,18 @@ def _presaving(model,model_dir,params):
     with open(join(model_dir,'params.txt'), 'w') as f:
         f.write(str(params))
 
-def _postsaving(model,history,model_dir):
-    model.save_weights(join(model_dir,'my_model_weights.h5'))
-    model.save(join(model_dir,'final_model.h5'))
-    with open(join(model_dir,'history.pck'), 'wb') as f:
+def _postsaving(model, history, model_dir):
+    model.save_weights(join(model_dir, 'my_model_weights.h5'))
+    model.save(join(model_dir, 'final_model.h5'))
+    with open(join(model_dir, 'history.pck'), 'wb') as f:
         pickle.dump(history.history, f)
         f.close()
-
 
 def count_files(folder):
     s = 0
     for t in list(os.walk(folder)):
         s += len(t[2])
     return s
-
 
 if __name__=='__main__':
     DATA_PATH = join(PATH,'../../data/wikipaintings/wikipaintings_train')

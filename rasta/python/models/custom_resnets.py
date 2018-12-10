@@ -55,8 +55,6 @@ def resnet152():
 
 
 def custom_resnet(n=0,dp_rate=0):
-
-
     WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5'
     WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
@@ -79,7 +77,6 @@ def custom_resnet(n=0,dp_rate=0):
     x = keras.applications.resnet50.conv_block(x, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1))
     x = keras.applications.resnet50.identity_block(x, 3, [64, 64, 256], stage=2, block='b')
     x = keras.applications.resnet50.identity_block(x, 3, [64, 64, 256], stage=2, block='c')
-
 
     x = keras.applications.resnet50.conv_block(x, 3, [128, 128, 512], stage=3, block='a')
     x = keras.applications.resnet50.identity_block(x, 3, [128, 128, 512], stage=3, block='b')
@@ -125,9 +122,6 @@ def custom_resnet(n=0,dp_rate=0):
     return model
 
 def resnet_dropout(include_top=False, weights='imagenet', input_tensor = None, pooling='avg', input_shape=(224,224,3),classes=25,dp_rate=0.,n_retrain_layers=0):
-
-
-
     WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5'
     WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
 

@@ -1,9 +1,12 @@
-from models.alexnet import decaf,alexnet
+from models.alexnet import decaf, alexnet
 from models.processing import train_model_from_directory
 from models.custom_resnets import *
 from models.inceptionV4 import inception_v4
+from multi_gpu import to_multi_gpu
+
 from keras.layers import Dense
 from keras.models import Model
+from keras.optimizers import Adam
 from keras import backend as K
 import os
 from os.path import join
@@ -17,7 +20,7 @@ parser = argparse.ArgumentParser(description='Description')
 
 parser.add_argument('-m', action="store", default='resnet',dest='model_name',help='Name of the model [alexnet_empty|decaf6|resnet|inception|inceptionv4|resnet2|empty_resnet|resnet_dropout|resnet_18|resnet_34|resnet_101|resnet_152|custom_resnet')
 parser.add_argument('-b', action="store", default=32, type=int,dest='batch_size',help='Size of the batch.')
-parser.add_argument('-e', action="store",default=10,type=int,dest='epochs',help='Number of epochs')
+parser.add_argument('-e', action="store", default=10,type=int,dest='epochs',help='Number of epochs')
 parser.add_argument('-f', action="store", default=False, type=bool,dest='horizontal_flip',help='Set horizontal flip or not [True|False]')
 parser.add_argument('-n', action="store", default=0, type=int,dest='n_layers_trainable',help='Set the number of last trainable layers')
 parser.add_argument('-d', action="store", default=0, type=float,dest='dropout_rate',help='Set the dropout_rate')
@@ -26,9 +29,9 @@ parser.add_argument('-p', action="store",dest='preprocessing',help='Set imagenet
 
 parser.add_argument('--distortions', action="store", type=float,dest='disto',default=0.,help='Activate distortions or not')
 
-parser.add_argument('--train_path', action="store", default=join(PATH, '../../data/wikiart_rasta/train'),dest='training_path',help='Path of the training data directory')
-parser.add_argument('--val_path', action="store", default=join(PATH, '../../data/wikiart_rasta/val'),dest='validation_path',help='Path of the validation data directory')
-
+parser.add_argument('--train_path', action="store", default=join(PATH, '../../data/wikipaintings/wikipaintings_train'),dest='training_path',help='Path of the training data directory')
+parser.add_argument('--val_path', action="store", default=join(PATH, '../../data/wikipaintings/wikipaintings_val'),dest='validation_path',help='Path of the validation data directory')
+parser.add_argument('--opt', action="store", default='rmsprop', dest='optimizer',help='Optimizer to use')
 
 
 args = parser.parse_args()
@@ -41,11 +44,13 @@ TRAINING_PATH = args.training_path
 VAL_PATH = args.validation_path
 n_layers_trainable = args.n_layers_trainable
 dropout_rate = args.dropout_rate
+optimizer = args.optimizer
 
 params = vars(args)
 
-# BUILDING MODEL
+name = model_name+'_'+optimizer
 
+# BUILDING MODEL
 
 if model_name =='alexnet_empty':
     K.set_image_data_format('channels_first')
@@ -133,5 +138,17 @@ elif model_name == 'custom_resnet':
 else:
     print("The model name doesn't exist")
 
-model.compile(loss='categorical_crossentropy',optimizer='rmsprop',metrics=['accuracy'])
-train_model_from_directory(TRAINING_PATH,model,model_name=model_name,target_size=size,validation_path=VAL_PATH,epochs = epochs,batch_size = batch_size,horizontal_flip=flip,params=params,preprocessing=args.preprocessing,distortions=args.disto)
+# SELECT OPTIMIZER
+
+if optimizer == 'rmsprop':
+    optimizer = 'rmsprop'
+elif optimizer == 'sgd':
+    optimizer = 'sgd':
+elif optimizer == 'adam':
+    optimizer = 'adam'
+elif optimizer == 'amsgrad':
+    optimizer = Adam(amsgrad=True)
+
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+model = to_multi_gpu(model, n_gpus=16)
+train_model_from_directory(TRAINING_PATH,model,model_name=name,target_size=size,validation_path=VAL_PATH,epochs = epochs,batch_size = batch_size,horizontal_flip=flip,params=params,preprocessing=args.preprocessing,distortions=args.disto)
