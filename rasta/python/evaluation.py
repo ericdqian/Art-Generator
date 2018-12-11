@@ -17,7 +17,7 @@ from keras.preprocessing.image import load_img,img_to_array
 from utils.utils import imagenet_preprocess_input,get_dico,wp_preprocess_input,invert_dico
 from keras import activations
 
-DEFAULT_MODEL_PATH='../savings/resnet_rmsprop_n-trainable-30_2018_12_10-14h2m31/model.h5'
+DEFAULT_MODEL_PATH='../savings/resnet_rmsprop_n-trainable-30_2018_12_10-14h2m31/final_model.h5'
 DEFAULT_BAGGING=True
 DEFAULT_PREPROCESSING=None
 
@@ -33,7 +33,7 @@ def main():
                         help='if the model is a decaf6 type')
     parser.add_argument('-k', action="store", default='1,3,5', type=str, dest='k', help='top-k number')
     parser.add_argument('--data_path', action="store",
-                        default=join(PATH, '../../data/wikiart_rasta/test'), dest='data_path',
+                        default=join(PATH, '../../data/wikiart_awstest'), dest='data_path',
                         help='Path of the data (image or train folder)')
     parser.add_argument('--model_path', action="store", dest='model_path', default=DEFAULT_MODEL_PATH,
                         help='Path of the h5 model file')
@@ -102,6 +102,10 @@ def get_y_pred(model_path, test_data_path, is_decaf6=False,top_k=1,bagging = Fal
     print('Calculating predictions...')
     bar = ProgressBar(max_value=s)
     i = 0
+
+    matrix_labels = []
+    matrix_preds = []
+
     for style_name in style_names:
         style_path = join(test_data_path, style_name)
         img_names = os.listdir(style_path)
@@ -114,11 +118,19 @@ def get_y_pred(model_path, test_data_path, is_decaf6=False,top_k=1,bagging = Fal
             else :
                 x = _preprocess_input(x,preprocessing)
                 pred = model.predict(x[np.newaxis,...])
+            print(pred)
+            print(args_sorted)
             args_sorted = np.argsort(pred)[0][::-1]
+            matrix_labels.append(style_name)
+            matrix_preds.append(args_sorted[0])
+
             y_true.append(label)
             y_pred.append([a for a in args_sorted[:top_k]])
             i += 1
             bar.update(i)
+
+    plot_confusion_matrix(labels,preds)
+
     return np.asarray(y_pred), y_true
 
 
@@ -200,6 +212,7 @@ def plot_confusion_matrix(labels,preds):
     plt.xticks(range(25), dico.keys(), rotation=90)
     plt.colorbar()
     plt.show()
+    savefig('../../assets/confusion_matrix.png', dpi = 300)
 
 def get_per_class_accuracy(labels,preds):
     names = []
