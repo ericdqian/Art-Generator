@@ -16,11 +16,10 @@ from datetime import datetime
 from keras.preprocessing.image import load_img,img_to_array
 from utils.utils import imagenet_preprocess_input,get_dico,wp_preprocess_input,invert_dico
 from keras import activations
-from vis.utils import utils
 
-DEFAULT_MODEL_PATH='models/default/model.h5'
+DEFAULT_MODEL_PATH='../savings/resnet_rmsprop_n-trainable-30_2018_12_10-14h2m31/model.h5'
 DEFAULT_BAGGING=True
-DEFAULT_PREPROCESSING='imagenet'
+DEFAULT_PREPROCESSING=None
 
 def main():
     PATH = os.path.dirname(__file__)
@@ -34,7 +33,7 @@ def main():
                         help='if the model is a decaf6 type')
     parser.add_argument('-k', action="store", default='1,3,5', type=str, dest='k', help='top-k number')
     parser.add_argument('--data_path', action="store",
-                        default=join(PATH, '../data/wikipaintings_small/wikipaintings_test'), dest='data_path',
+                        default=join(PATH, '../../data/wikiart_rasta/test'), dest='data_path',
                         help='Path of the data (image or train folder)')
     parser.add_argument('--model_path', action="store", dest='model_path', default=DEFAULT_MODEL_PATH,
                         help='Path of the h5 model file')

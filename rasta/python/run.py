@@ -6,7 +6,7 @@ from models.inceptionV4 import inception_v4
 
 from keras.layers import Dense
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.optimizers import SGD, Adam
 from keras import backend as K
 # from keras.utils import multi_gpu_models
 import os
@@ -34,6 +34,7 @@ parser.add_argument('--train_path', action="store", default=join(PATH, '../../da
 parser.add_argument('--val_path', action="store", default=join(PATH, '../../data/wikiart_rasta/val'),dest='validation_path',help='Path of the validation data directory')
 
 parser.add_argument('--opt', action="store", default='rmsprop', dest='optimizer',help='Optimizer to use')
+parser.add_argument('--mom', action="store", default=0.9, type=float, dest='momentum',help='Momentum for SGD')
 parser.add_argument('--start-layer', action="store", type=int, default=None, dest='start_layer',help='Layer to start one')
 
 args = parser.parse_args()
@@ -148,6 +149,8 @@ if optimizer == 'rmsprop':
     optimizer = 'rmsprop'
 elif optimizer == 'sgd':
     optimizer = 'sgd'
+elif optimizer == 'sgd_mom':
+    optimizer = keras.optimizers.SGD(lr=0.01, momentum=args.momentum, decay=0.0, nesterov=False)
 elif optimizer == 'adam':
     optimizer = 'adam'
 elif optimizer == 'amsgrad':
