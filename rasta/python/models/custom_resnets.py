@@ -15,7 +15,7 @@ def resnet_trained(n_retrain_layers = 0, start_layer=None):
     base_model = ResNet50(include_top=False,input_shape=(224,224,3))
     features = GlobalAveragePooling2D()(base_model.output)
     model = Model(inputs=base_model.input, outputs=features)
-    model = _set_n_retrain(model,n_retrain_layers, start_layer=start_layer)
+    model = _set_n_retrain(model, n_retrain_layers, start_layer=start_layer)
     return model
 
 
