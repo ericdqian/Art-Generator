@@ -34,7 +34,7 @@ parser.add_argument('--train_path', action="store", default=join(PATH, '../../da
 parser.add_argument('--val_path', action="store", default=join(PATH, '../../data/wikiart_rasta/val'),dest='validation_path',help='Path of the validation data directory')
 
 parser.add_argument('--opt', action="store", default='rmsprop', dest='optimizer',help='Optimizer to use')
-parser.add_argument('--start-layer', action="store", default=None, dest='start_layer',help='Layer to start one')
+parser.add_argument('--start-layer', action="store", type=int, default=None, dest='start_layer',help='Layer to start one')
 
 args = parser.parse_args()
 
