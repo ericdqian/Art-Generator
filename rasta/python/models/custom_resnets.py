@@ -234,11 +234,13 @@ def _set_n_retrain(model, n, reinit=False, start_layer=None):
 
     if start_layer is None:
         trainable_layers = w_layers[-n:]
-    elif start_layer <= 0 or start_layer + n > len(w_layers):
+    elif start_layer <= 0 or start_layer + n-1 > len(w_layers):
         print("Not a valid start_layer between 1 and", len(w_layers), "Defaulting...")
         trainable_layers = w_layers[-n:]
     else:
-        trainable_layers = w_layers[start_layer-1:start_layer+n-1]
+        trainable_layers = w_layers[start_layer-1:start_layer+n-1] 
+        if start_layer + n-1 != len(w_layers):
+            trainable_layers.append(w_layers[-1])
 
     if n > len(w_layers):
         n == len(w_layers)
