@@ -1,3 +1,9 @@
+This is a fork of RASTA made in the fall of 2018, with fixes, improvements, and additional parameters that supplement the research and results found by the original paper.
+
+Note that the overall project (Art-Generator) worked only with the ResNet50 section of the code, and that the functionality of the remainder of the code cannot be guaranteed (i.e. the original code source may still have bugs that we, the authors of Art-Generator are unaware of).
+
+Below is the original README.md of RASTA:
+
 # RASTA
 
 The Rasta project aims at recognising art style automatically using pixel data only (i.e. no meta-data). For more details about the methodology and the results, see the publication.
