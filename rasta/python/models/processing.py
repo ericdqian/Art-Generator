@@ -12,11 +12,18 @@ from utils.utils import imagenet_preprocess_input,wp_preprocess_input,custom_pre
 PATH = os.path.dirname(__file__)
 SAVINGS_DIR = join(PATH,'../../savings')
 
-def train_model_from_directory(directory_path, model, model_name ='model',target_size =(256,256), batch_size = 64, horizontal_flip = False,epochs=30,steps_per_epoch=None,validation_path=None,validation_steps=None,params=None,preprocessing=None,distortions=0.):
+def train_model_from_directory(
+        directory_path, model, model_name ='model', 
+        target_size=(256,256), batch_size = 64, horizontal_flip=False, 
+        epochs=30, steps_per_epoch=None,
+        validation_path=None, validation_steps=None, 
+        params=None, preprocessing=None, 
+        distortions=0.
+    ):
 
     # Naming and creating folder
     now = datetime.datetime.now()
-    model_name = model_name+'_' + str(now.year) + '_' + str(now.month) + '_' + str(now.day) + '-' + str(now.hour) +':'+ str(now.minute) +':'+ str(now.second)
+    model_name = model_name+'_' + str(now.year) + '_' + str(now.month) + '_' + str(now.day) + '-' + str(now.hour) +'h'+ str(now.minute) +'m'+ str(now.second)
 
     model_name_temp = model_name
     i=0
@@ -38,10 +45,10 @@ def train_model_from_directory(directory_path, model, model_name ='model',target
 
     _presaving(model,MODEL_DIR,params)
 
-    preprocessing_fc =None
-    if preprocessing=='imagenet':
+    preprocessing_fc = None
+    if preprocessing =='imagenet':
         preprocessing_fc = imagenet_preprocess_input
-    elif preprocessing=='wp':
+    elif preprocessing =='wp':
         preprocessing_fc = wp_preprocess_input
     elif preprocessing =='custom':
         preprocessing_fc = custom_preprocess_input

@@ -227,30 +227,38 @@ def _get_weighted_layers(model):
             res.append(layer.name)
     return res
 
-def _set_n_retrain(model,n,reinit=False):
+def _set_n_retrain(model, n, reinit=False, start_layer=None):
     w_layers = _get_weighted_layers(model)
     if reinit:
         empty_model = empty_resnet()
+
+    if start_layer is None:
+        trainable_layers = w_layers[-n:]
+    elif start_layer <= 0 or start_layer + n > len(w_layers):
+        print("Not a valid start_layer between 1 and", len(w_layers), "Defaulting...")
+        trainable_layers = w_layers[-n:]
+    else:
+        trainable_layers = w_layers[start_layer-1:start_layer+n-1]
 
     if n > len(w_layers):
         n == len(w_layers)
     if n>0:
         if reinit:
             for layer, layer_empty in zip(model.layers, empty_model.layers):
-                if layer.name in w_layers[-n:]:
+                if layer.name in trainable_layers:
                     layer.trainable = True
                     w = layer_empty.get_weights()
                     layer.set_weights(w)
                 else:
                     layer.trainable = False
-        else :
+        else:
             for layer in model.layers:
-                if layer.name in w_layers[-n:]:
+                if layer.name in trainable_layers:
                     layer.trainable = True
                 else:
                     layer.trainable = False
 
-    else :
+    else:
         for layer in model.layers:
             layer.trainable = False
 

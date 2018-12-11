@@ -2,13 +2,13 @@ from models.alexnet import decaf, alexnet
 from models.processing import train_model_from_directory
 from models.custom_resnets import *
 from models.inceptionV4 import inception_v4
-from multi_gpu import to_multi_gpu
+# from multi_gpu import to_multi_gpu
 
 from keras.layers import Dense
 from keras.models import Model
 from keras.optimizers import Adam
 from keras import backend as K
-from keras.utils import multi_gpu_models
+# from keras.utils import multi_gpu_models
 import os
 from os.path import join
 import argparse
@@ -34,7 +34,7 @@ parser.add_argument('--train_path', action="store", default=join(PATH, '../../da
 parser.add_argument('--val_path', action="store", default=join(PATH, '../../data/wikiart_rasta/val'),dest='validation_path',help='Path of the validation data directory')
 
 parser.add_argument('--opt', action="store", default='rmsprop', dest='optimizer',help='Optimizer to use')
-
+parser.add_argument('--start-layer', action="store", default=None, dest='start_layer',help='Layer to start one')
 
 args = parser.parse_args()
 
@@ -47,10 +47,13 @@ VAL_PATH = args.validation_path
 n_layers_trainable = args.n_layers_trainable
 dropout_rate = args.dropout_rate
 optimizer = args.optimizer
+start_layer = args.start_layer
 
 params = vars(args)
 
-name = model_name+'_'+optimizer+'_n-trainable-'+n_layers_trainable
+name = model_name+'_'+optimizer+'_n-trainable-'+str(n_layers_trainable)
+if start_layer is not None:
+    name = name+'_start-layer-'+str(start_layer)
 
 # BUILDING MODEL
 
@@ -74,7 +77,7 @@ elif model_name =='resnet':
     K.set_image_data_format('channels_last')
     size = (224,224)
 
-    base_model = resnet_trained(n_layers_trainable)
+    base_model = resnet_trained(n_layers_trainable, start_layer)
     predictions = Dense(27, activation='softmax')(base_model.output)
     model = Model(inputs=base_model.input, outputs=predictions)
 
@@ -90,7 +93,6 @@ elif model_name =='inceptionv4':
     K.set_image_data_format('channels_last')
     size = (299,299)
     model = inception_v4()
-
 
 elif model_name=='resnet2':
     K.set_image_data_format('channels_last')
@@ -151,6 +153,5 @@ elif optimizer == 'adam':
 elif optimizer == 'amsgrad':
     optimizer = Adam(amsgrad=True)
 
-model = multi_gpu_model(model, gpus=16)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 train_model_from_directory(TRAINING_PATH,model,model_name=name,target_size=size,validation_path=VAL_PATH,epochs = epochs,batch_size = batch_size,horizontal_flip=flip,params=params,preprocessing=args.preprocessing,distortions=args.disto)
