@@ -34,10 +34,10 @@ def custom_preprocess_input(x):
 
 #DICO FUNCTIONS
 
-def get_dico():
+def get_dico(data_path='../../../data/wikiart_small'):
     classes = []
     PATH = os.path.dirname(__file__)
-    directory = join(PATH,'../../../data/wikiart_rasta/train')
+    directory = join(PATH,data_path)
     for subdir in sorted(os.listdir(directory)):
         if os.path.isdir(os.path.join(directory, subdir)):
             classes.append(subdir)
